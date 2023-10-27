@@ -8,6 +8,8 @@ const passport = require('passport')
 const flash = require('express-flash')
 const session = require('express-session')
 const methodOverride = require('method-override')
+const bodyParser = require('body-parser');
+const Task = require('./src/models/Task');
 
 const initializePassport = require('./passport-config')
 initializePassport(
@@ -17,6 +19,7 @@ initializePassport(
 )
 
 const users = []
+const tasks = []
 
 app.set('view-engine', 'ejs')
 app.use(express.urlencoded({ extended: false }))
@@ -63,6 +66,51 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     }
     console.log(users)
 })
+
+// create new task
+app.post('/tasks', checkAuthenticated, (req, res) => {
+    const { title, description, assignee, dueDate } = req.body;
+    const newTask = new Task(title, description, assignee, dueDate);
+    tasks.push(newTask);
+    res.json(newTask);
+});
+
+// Get all tasks
+app.get('/tasks', checkAuthenticated, (req, res) => {
+    res.json(tasks);
+});
+
+// Update a task
+app.put('/tasks/:id', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const { title, description, assignee, dueDate, completed } = req.body;
+    const taskToUpdate = tasks.find((task) => task.id === id);
+
+    if (!taskToUpdate) {
+        return res.status(404).json({ message: 'Task not found' });
+    }
+
+    taskToUpdate.title = title || taskToUpdate.title;
+    taskToUpdate.description = description || taskToUpdate.description;
+    taskToUpdate.assignee = assignee || taskToUpdate.assignee;
+    taskToUpdate.dueDate = dueDate || taskToUpdate.dueDate;
+    taskToUpdate.completed = completed || taskToUpdate.completed;
+
+    res.json(taskToUpdate);
+});
+
+// delete a task
+app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const taskIndex = tasks.findIndex((tasks) => task.id === id);
+
+    if (taskIndex === -1) {
+        return res.status(404).json({ message: 'Task not found' });
+    }
+
+    tasks.splice(taskIndex, 1);
+    res.json({ message: 'Task deleted successfully' });
+});
 
 app.delete('/logout', (req, res) => {
     req.logout((err) => {
