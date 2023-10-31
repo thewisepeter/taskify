@@ -1,0 +1,13 @@
+<h1>Tasks Added</h1>
+<ul>
+    <% tasks.forEach(task => { %>
+        <li>
+            <h2><%= task.title %></h2>
+            <p>Description: <%= task.description %></p>
+            <p>Assignee: <%= task.assignee %></p>
+            <p>Due Date: <%= task.dueDate %></p>
+        </li>
+    <% }); %>
+</ul>
+<p>Your tasks have been successfully added.</p>
+<a href="/">Add Another Task</a>

@@ -72,7 +72,7 @@ app.post('/tasks', checkAuthenticated, (req, res) => {
     const { title, description, assignee, dueDate } = req.body;
     const newTask = new Task(title, description, assignee, dueDate);
     tasks.push(newTask);
-    res.json(newTask);
+    res.render('task.ejs', { tasks });
 });
 
 // Get all tasks
