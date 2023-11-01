@@ -1,3 +1,3 @@
-taskify
+Taskify
 
-Web management web app
+Project management web app
