@@ -67,7 +67,7 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     console.log(users)
 })
 
-// create new task
+// create new Task
 app.post('/tasks', checkAuthenticated, (req, res) => {
     const { title, description, assignee, dueDate } = req.body;
     const newTask = new Task(title, description, assignee, dueDate);
@@ -80,7 +80,7 @@ app.get('/tasks', checkAuthenticated, (req, res) => {
     res.json(tasks);
 });
 
-// Update a task
+// Update a Task
 app.put('/tasks/:id', checkAuthenticated, (req, res) => {
     const { id } = req.params;
     const { title, description, assignee, dueDate, completed } = req.body;
@@ -99,7 +99,7 @@ app.put('/tasks/:id', checkAuthenticated, (req, res) => {
     res.json(taskToUpdate);
 });
 
-// delete a task
+// delete a Task
 app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
     const { id } = req.params;
     const taskIndex = tasks.findIndex((tasks) => task.id === id);
