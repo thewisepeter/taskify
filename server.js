@@ -80,8 +80,21 @@ app.get('/tasks', checkAuthenticated, (req, res) => {
     res.json(tasks);
 });
 
+// edit Task
+app.get('/tasks/:id/edit', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const taskToUpdate = tasks.find((task) => task.id === id);
+  
+    if (!taskToUpdate) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+  
+    res.render('editTask.ejs', { task: taskToUpdate });
+  });
+  
+
 // Update a Task
-app.put('/tasks/:id', checkAuthenticated, (req, res) => {
+app.post('/tasks/:id', checkAuthenticated, (req, res) => {
     const { id } = req.params;
     const { title, description, assignee, dueDate, completed } = req.body;
     const taskToUpdate = tasks.find((task) => task.id === id);
@@ -90,13 +103,13 @@ app.put('/tasks/:id', checkAuthenticated, (req, res) => {
         return res.status(404).json({ message: 'Task not found' });
     }
 
-    taskToUpdate.title = title || taskToUpdate.title;
-    taskToUpdate.description = description || taskToUpdate.description;
-    taskToUpdate.assignee = assignee || taskToUpdate.assignee;
-    taskToUpdate.dueDate = dueDate || taskToUpdate.dueDate;
-    taskToUpdate.completed = completed || taskToUpdate.completed;
+    taskToUpdate.title = title;
+    taskToUpdate.description = description;
+    taskToUpdate.assignee = assignee;
+    taskToUpdate.dueDate = dueDate;
+    taskToUpdate.completed = completed;
 
-    res.json(taskToUpdate);
+    res.render('task.ejs', { tasks });
 });
 
 // delete a Task
@@ -118,7 +131,7 @@ app.delete('/logout', (req, res) => {
         console.error('Error during logout:', err);
         return res.redirect('/error'); // Handle errors as needed
       }
-      res.redirect('/login');
+      res.redirect('/tasks');
     });
   });
    
