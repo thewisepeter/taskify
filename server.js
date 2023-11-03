@@ -112,6 +112,29 @@ app.post('/tasks/:id', checkAuthenticated, (req, res) => {
     res.render('task.ejs', { tasks });
 });
 
+app.get('/tasks/:id/delete', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    res.render('deleteTask.ejs', { id });
+});
+
+app.post('/tasks/:id/delete', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+  
+    // Find the task to delete
+    const taskIndex = tasks.findIndex((task) => task.id === id);
+  
+    // If the task doesn't exist, return a 404 error
+    if (taskIndex === -1) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+  
+    // Delete the task from the array
+    tasks.splice(taskIndex, 1);
+  
+    // Redirect the user to the task list page
+    res.render('task.ejs', { tasks });
+  });
+  
 // delete a Task
 app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
     const { id } = req.params;
@@ -122,7 +145,7 @@ app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
     }
 
     tasks.splice(taskIndex, 1);
-    res.json({ message: 'Task deleted successfully' });
+    res.redirect('/tasks');
 });
 
 app.delete('/logout', (req, res) => {
