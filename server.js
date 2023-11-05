@@ -1,15 +1,16 @@
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
 }
-const express = require('express')
-const app = express()
-const bycrypt = require('bcrypt')
-const passport = require('passport')
-const flash = require('express-flash')
-const session = require('express-session')
-const methodOverride = require('method-override')
+const express = require('express');
+const app = express();
+const bycrypt = require('bcrypt');
+const passport = require('passport');
+const flash = require('express-flash');
+const session = require('express-session');
+const methodOverride = require('method-override');
 const bodyParser = require('body-parser');
 const Task = require('./src/models/Task');
+const Project = require('./src/models/Project');
 
 const initializePassport = require('./passport-config')
 initializePassport(
@@ -18,8 +19,9 @@ initializePassport(
     id => users.find(user => user.id === id)
 )
 
-const users = []
-const tasks = []
+const users = [];
+const tasks = [];
+const projects = [];
 
 app.set('view-engine', 'ejs')
 app.use(express.urlencoded({ extended: false }))
@@ -149,6 +151,70 @@ app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
     res.redirect('/tasks');
 });
 
+// Project endpoints
+// Create a new project
+app.post('/projects', checkAuthenticated, (req, res) => {
+    const { name, description, taskTitle, taskDescription, taskAssignee, taskDueDate } = req.body;
+  
+    const newProject = new Project(name, description);
+    const newTask = new Task(taskTitle, taskDescription, taskAssignee, taskDueDate);
+    newProject.tasks.push(newTask);
+    projects.push(newProject);
+    res.redirect('/projects');
+  });
+  
+
+// List all projects
+app.get('/projects', checkAuthenticated, (req, res) => {
+    res.render('projects.ejs', { projects });
+});
+
+// Edit a project
+app.get('/projects/:id/edit', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const projectToEdit = projects.find((project) => project.id === id);
+
+    if (!projectToEdit) {
+        return res.status(404).json({ message: 'Project not found' });
+    }
+
+    res.render('editProject.ejs', { project: projectToEdit });
+});
+  
+// Update a project
+app.post('/projects/:id', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const { name, description } = req.body;
+    const projectToUpdate = projects.find((project) => project.id === id);
+
+    if (!projectToUpdate) {
+        return res.status(404).json({ message: 'Project not found' });
+    }
+
+    projectToUpdate.name = name;
+    projectToUpdate.description = description;
+    res.redirect('/projects'); // Redirect to the projects list page.
+});
+
+// Delete a project
+app.get('/projects/:id/delete', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    res.render('deleteProject.ejs', { id });
+});
+
+app.post('/projects/:id/delete', checkAuthenticated, (req, res) => {
+    const { id } = req.params;
+    const projectIndex = projects.findIndex((project) => project.id === id);
+
+    if (projectIndex === -1) {
+        return res.status(404).json({ message: 'Project not found' });
+    }
+
+    projects.splice(projectIndex, 1);
+    res.redirect('/projects'); // Redirect to the projects list page.
+});
+
+
 app.delete('/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
@@ -172,4 +238,5 @@ function checkNotAuthenticated(req, res, next) {
     }
     next()
 }
+
 app.listen(3000)
