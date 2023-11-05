@@ -180,6 +180,49 @@ app.get('/projects/:id/edit', checkAuthenticated, (req, res) => {
 
     res.render('editProject.ejs', { project: projectToEdit });
 });
+
+//editing and deleting a task in a project
+app.get('/projects/:projectId/tasks/:taskId/edit', (req, res) => {
+    const projectId = req.params.projectId;
+    const taskId = req.params.taskId;
+    const project = projects.find((proj) => proj.id === projectId);
+
+    if (!project) {
+        return res.status(404).send('Project not found');
+    }
+
+    const taskToEdit = project.tasks.find((task) => task.id === taskId);
+
+    if (!taskToEdit) {
+        return res.status(404).send('Task not found');
+    }
+
+    // Render the edit form with taskToEdit.
+    res.render('editProjectTask.ejs', { project: project, task: taskToEdit });
+});
+
+app.get('/projects/:projectId/tasks/:taskId/delete', (req, res) => {
+    const projectId = req.params.projectId;
+    const taskId = req.params.taskId;
+    const project = projects.find((proj) => proj.id === projectId);
+
+    if (!project) {
+        return res.status(404).send('Project not found');
+    }
+
+    const taskIndex = project.tasks.findIndex((task) => task.id === taskId);
+
+    if (taskIndex === -1) {
+        return res.status(404).send('Task not found');
+    }
+
+    // Perform the task deletion here.
+    project.tasks.splice(taskIndex, 1);
+
+    // Redirect the user back to the project page, or wherever you want.
+    res.redirect('/projects/' + projectId);
+});
+
   
 // Update a project
 app.post('/projects/:id', checkAuthenticated, (req, res) => {
