@@ -35,7 +35,7 @@ app.use(methodOverride('_method'))
 app.use(express.static('public'));
 
 app.get('/', checkAuthenticated, (req, res) => {
-    res.render('index.ejs', { name: req.user.name })
+    res.render('index.ejs', { name: req.user.name, email: req.user.email })
 })
 
 app.get('/login', checkNotAuthenticated, (req, res) => {
