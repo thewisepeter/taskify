@@ -1,27 +1,38 @@
-<h1>Hi <%= name %></h1>
-<h1>Add Task</h1>
-<% if (messages.error) { %>
-    <p style="color: red;"><%= messages.error %></p>
-<% } %>
-<form action="/tasks" method="POST">
-    <div>
-        <label for="title">Title</label>
-        <input type="text" id="title" name="title" required>
-    </div>
-    <div>
-        <label for="description">Description</label>
-        <textarea id="description" name="description" required></textarea>
-    </div>
-    <div>
-        <label for="assignee">Assignee</label>
-        <input type="text" id="assignee" name="assignee" required>
-    </div>
-    <div>
-        <label for="dueDate">Due Date</label>
-        <input type="date" id="dueDate" name="dueDate" required>
-    </div>
-    <button type="submit">Add Task</button>
-</form>
-<form action="/logout?_method=DELETE" method="POST">
-    <button type="submit">Log Out</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>taskify</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <h1>Hi <%= name %></h1>
+    <h1>Add Task</h1>
+    <% if (messages.error) { %>
+        <p style="color: red;"><%= messages.error %></p>
+    <% } %>
+    <form action="/tasks" method="POST">
+        <div>
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        <div>
+            <label for="description">Description</label>
+            <textarea id="description" name="description" required></textarea>
+        </div>
+        <div>
+            <label for="assignee">Assignee</label>
+            <input type="text" id="assignee" name="assignee" required>
+        </div>
+        <div>
+            <label for="dueDate">Due Date</label>
+            <input type="date" id="dueDate" name="dueDate" required>
+        </div>
+        <button type="submit">Add Task</button>
+    </form>
+    <form action="/logout?_method=DELETE" method="POST">
+        <button type="submit">Log Out</button>
+    </form>
+</body>
+</html>
