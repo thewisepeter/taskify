@@ -1,15 +1,26 @@
-<h1>Tasks Added</h1>
-<ul>
-    <% tasks.forEach(task => { %>
-        <li>
-            <h2><%= task.title %></h2>
-            <p>Description: <%= task.description %></p>
-            <p>Assignee: <%= task.assignee %></p>
-            <p>Due Date: <%= task.dueDate %></p>
-            <a href="/tasks/<%= task.id %>/edit">Edit</a>
-            <a href="/tasks/<%= task.id %>/delete">Delete</a>
-        </li>
-    <% }); %>
-</ul>
-<p>Your tasks have been successfully added.</p>
-<a href="/">Add Another Task</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>taskify</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <h1>Tasks Added</h1>
+    <ul>
+        <% tasks.forEach(task => { %>
+            <li>
+                <h2><%= task.title %></h2>
+                <p>Description: <%= task.description %></p>
+                <p>Assignee: <%= task.assignee %></p>
+                <p>Due Date: <%= task.dueDate %></p>
+                <a href="/tasks/<%= task.id %>/edit">Edit</a>
+                <a href="/tasks/<%= task.id %>/delete">Delete</a>
+            </li>
+        <% }); %>
+    </ul>
+    <p>Your tasks have been successfully added.</p>
+    <a href="/">Add Another Task</a>
+</body>
+</html>
