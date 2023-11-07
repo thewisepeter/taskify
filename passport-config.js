@@ -1,29 +1,44 @@
-const LocalStrategy = require('passport-local').Strategy
-const bcrypt = require('bcrypt')
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
 
-function initialize(passport, getUserByEmail, getUserById) {
-    const authenticateUser = async (email, password, done) => {
-        const user = getUserByEmail(email)
-        if (user == null) {
-            return done(null, false, { message: 'No user with that email' })
-        }
+function initialize(passport, db) {
+  const authenticateUser = (email, password, done) => {
+    db.query('SELECT * FROM users WHERE email = ?', [email], (err, rows) => {
+      if (err) {
+        return done(err);
+      }   
 
-        try {
-            if (await bcrypt.compare(password, user.password)) {
-                return done(null, user)
-            } else {
-                return done(null, false, { message: 'Password incorrect' })
-            }
-        } catch (e) {
-            return done(e)
-        }
-    }
+      const user = rows[0];
 
-    passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser))
-    passport.serializeUser((user, done) => done(null, user.id))
-    passport.deserializeUser((id, done) => {
-        return done(null, getUserById(id))
-    })
+      if (!user) {
+        return done(null, false, { message: 'No user with that email' }); 
+      }   
+
+      bcrypt.compare(password, user.password, (err, result) => {
+        if (err) {
+          return done(err);
+        }   
+    
+        if (result) {
+          return done(null, user);
+        } else {
+          return done(null, false, { message: 'Password incorrect' }); 
+        }   
+      }); 
+    }); 
+  }
+
+  passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser));
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const [rows] = await db.promise().query('SELECT * FROM users WHERE id = ?', [id]);
+      const user = rows[0];
+      return done(null, user);
+    } catch (error) {
+      return done(error);
+    }   
+  });
 }
 
-module.exports = initialize
+module.exports = initialize;

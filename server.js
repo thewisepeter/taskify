@@ -11,15 +11,30 @@ const methodOverride = require('method-override');
 const bodyParser = require('body-parser');
 const Task = require('./src/models/Task');
 const Project = require('./src/models/Project');
+const mysql = require('mysql2');
 
-const initializePassport = require('./passport-config')
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'taskify',
+    password: 'taskify_1',
+    database: 'taskify',
+});
+
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to MySQL database:', err);
+    return;
+  }
+  console.log('Connected to MySQL database');
+});
+
+const initializePassport = require('./passport-config');
+
 initializePassport(
     passport,
-    email => users.find(user => user.email === email),
-    id => users.find(user => user.id === id)
-)
+    db
+);
 
-const users = [];
 const tasks = [];
 const projects = [];
 
@@ -56,14 +71,21 @@ app.get('/register', checkNotAuthenticated, (req, res) => {
 
 app.post('/register', checkNotAuthenticated, async (req, res) => {
     try {
-        const hashedPassword = await bycrypt.hash(req.body.password, 10)
-        users.push({
-            id: Date.now().toString(),
-            name: req.body.name,
-            email: req.body.email,
-            password: hashedPassword
-        })
-        res.redirect('/login')
+        const { name, email, password } = req.body;
+        const hashedPassword = await bycrypt.hash(password, 10);
+
+        db.query(
+            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+            [name, email, hashedPassword],
+            (err, results) => {
+                if (err) {
+                    console.error('Error inserting user:', err);
+                    return res.status(500).send('Error creating user');
+                }
+                res.redirect('/login');
+            }
+        );
+        
     } catch {
         res.redirect('/register')
     }
@@ -87,14 +109,14 @@ app.get('/tasks', checkAuthenticated, (req, res) => {
 app.get('/tasks/:id/edit', checkAuthenticated, (req, res) => {
     const { id } = req.params;
     const taskToUpdate = tasks.find((task) => task.id === id);
-  
+
     if (!taskToUpdate) {
       return res.status(404).json({ message: 'Task not found' });
     }
-  
+
     res.render('editTask.ejs', { task: taskToUpdate });
   });
-  
+
 
 // Update a Task
 app.post('/tasks/:id', checkAuthenticated, (req, res) => {
@@ -122,22 +144,22 @@ app.get('/tasks/:id/delete', checkAuthenticated, (req, res) => {
 
 app.post('/tasks/:id/delete', checkAuthenticated, (req, res) => {
     const { id } = req.params;
-  
+
     // Find the task to delete
     const taskIndex = tasks.findIndex((task) => task.id === id);
-  
+
     // If the task doesn't exist, return a 404 error
     if (taskIndex === -1) {
       return res.status(404).json({ message: 'Task not found' });
     }
-  
+
     // Delete the task from the array
     tasks.splice(taskIndex, 1);
-  
+
     // Redirect the user to the task list page
     res.render('task.ejs', { tasks });
   });
-  
+
 // delete a Task
 app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
     const { id } = req.params;
@@ -155,14 +177,14 @@ app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
 // Create a new project
 app.post('/projects', checkAuthenticated, (req, res) => {
     const { name, description, taskTitle, taskDescription, taskAssignee, taskDueDate } = req.body;
-  
+
     const newProject = new Project(name, description);
     const newTask = new Task(taskTitle, taskDescription, taskAssignee, taskDueDate);
     newProject.tasks.push(newTask);
     projects.push(newProject);
     res.redirect('/projects');
   });
-  
+
 
 // List all projects
 app.get('/projects', checkAuthenticated, (req, res) => {
@@ -223,7 +245,7 @@ app.get('/projects/:projectId/tasks/:taskId/delete', (req, res) => {
     res.redirect('/projects/' + projectId);
 });
 
-  
+
 // Update a project
 app.post('/projects/:id', checkAuthenticated, (req, res) => {
     const { id } = req.params;
@@ -267,7 +289,7 @@ app.delete('/logout', (req, res) => {
       res.redirect('/tasks');
     });
   });
-   
+
 function checkAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return next()
