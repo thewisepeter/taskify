@@ -169,6 +169,30 @@ app.post('/projects', checkAuthenticated, async (req, res) => {
         res.status(500).send('Error creating project');
     }
 });
+
+// route to add task to project
+app.post('/projects/tasks', checkAuthenticated, async (req, res) => {
+    // Retrieve task data from the request body
+    const { title, description, assignee, dueDate } = req.body;
+
+    // Create a new task in the database (you may need to adjust this part as needed)
+    try {
+        const task = await Task.create({
+            title: title,
+            description: description,
+            assignee: assignee,
+            dueDate: dueDate,
+            UserId: req.user.id,
+        });
+
+        // You can choose to redirect to the project details page or another appropriate page
+        res.redirect(`/projects/${req.params.projectId}`); // Redirect to the project's details page
+    } catch (error) {
+        console.error('Error creating task:', error);
+        res.status(500).send('Error creating task');
+    }
+});
+
   
 // Route for rendering the task creation form
 app.get('/projects/:projectId/tasks/new', checkAuthenticated, (req, res) => {
@@ -194,7 +218,7 @@ app.post('/projects/:projectId/tasks', checkAuthenticated, async (req, res) => {
       });
   
       // Redirect to a page that displays the newly created task
-      res.redirect(`/projects/${req.params.projectId}/tasks/${task.id}`);
+      res.redirect(`/projects`);
     } catch (error) {
       console.error('Error creating task:', error);
       res.status(500).send('Error creating task');

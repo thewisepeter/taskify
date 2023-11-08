@@ -13,6 +13,7 @@
             <li>
                 <h2><%= project.name %></h2>
                 <!-- Display other project details and provide links to view/edit/delete projects -->
+                <a href="/projects/<%= project.id %>/tasks/new">Add Task</a>
                 <a href="/projects/<%= project.id %>">View</a>
                 <a href="/projects/<%= project.id %>/edit">Edit</a>
                 <a href="/projects/<%= project.id %>/delete">Delete</a>
