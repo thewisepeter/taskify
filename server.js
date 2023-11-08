@@ -3,43 +3,57 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const express = require('express');
 const app = express();
-const bycrypt = require('bcrypt');
-const passport = require('passport');
-const flash = require('express-flash');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const bodyParser = require('body-parser');
-const Task = require('./src/models/Task');
-const Project = require('./src/models/Project');
-const mysql = require('mysql2');
+const { Sequelize, DataTypes } = require('sequelize');
+const passport = require('passport');
+const bcrypt = require('bcrypt');
+const flash = require('express-flash');
 
-const db = mysql.createConnection({
+// Initialize Sequelize with your database connection details
+const sequelize = new Sequelize('taskify', 'taskify', 'taskify_1', {
     host: 'localhost',
-    user: 'taskify',
-    password: 'taskify_1',
-    database: 'taskify',
+    dialect: 'mysql',
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error('Error connecting to MySQL database:', err);
-    return;
-  }
-  console.log('Connected to MySQL database');
+// Define Sequelize models for User, Project, and Task
+const User = sequelize.define('User', {
+    name: DataTypes.STRING,
+    email: {
+        type: DataTypes.STRING,
+        unique: true, // Ensures email is unique
+    },
+    password: DataTypes.STRING,
+});
+
+const Project = sequelize.define('Project', {
+    name: DataTypes.STRING,
+    description: DataTypes.TEXT,
+});
+
+const Task = sequelize.define('Task', {
+    title: DataTypes.STRING,
+    description: DataTypes.TEXT,
+    assignee: DataTypes.STRING,
+    dueDate: DataTypes.DATE,
+    completed: DataTypes.BOOLEAN,
 });
 
 const initializePassport = require('./passport-config');
 
-initializePassport(
-    passport,
-    db
-);
+initializePassport(passport, User); // Pass your User model to initializePassport
 
-const tasks = [];
-const projects = [];
 
+// Define associations between models
+User.hasMany(Project);
+User.hasMany(Task);
+Project.hasMany(Task);
+Task.belongsTo(User);
+Task.belongsTo(Project);
+ 
 app.set('view-engine', 'ejs')
-app.use(express.urlencoded({ extended: false }))
+app.use(express.urlencoded({ extended: false })) 
 app.use(flash())
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -71,214 +85,35 @@ app.get('/register', checkNotAuthenticated, (req, res) => {
 
 app.post('/register', checkNotAuthenticated, async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        const hashedPassword = await bycrypt.hash(password, 10);
+        const { name, email, password, 'retype-password': retypePassword } = req.body;
 
-        db.query(
-            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-            [name, email, hashedPassword],
-            (err, results) => {
-                if (err) {
-                    console.error('Error inserting user:', err);
-                    return res.status(500).send('Error creating user');
-                }
-                res.redirect('/login');
-            }
-        );
-        
-    } catch {
-        res.redirect('/register')
+        // Check if the email already exists in the database
+        const existingUser = await User.findOne({ where: { email: email } });
+
+        if (existingUser) {
+            // Email already in use
+            return res.status(400).send('Email is already in use');
+        }
+
+        if (password !== retypePassword) {
+            return res.status(400).send('Passwords do not match');
+        }
+
+        // If the email is not in use, proceed with registration
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await User.create({
+            name: name,
+            email: email,
+            password: hashedPassword,
+        });
+
+        res.redirect('/login');
+    } catch (error) {
+        console.error('Error registering user:', error);
+        res.status(500).send('Error creating user');
     }
-    console.log(users)
-})
-
-// create new Task
-app.post('/tasks', checkAuthenticated, (req, res) => {
-    const { title, description, assignee, dueDate } = req.body;
-    const newTask = new Task(title, description, assignee, dueDate);
-    tasks.push(newTask);
-    res.render('task.ejs', { tasks });
 });
-
-// Get all tasks
-app.get('/tasks', checkAuthenticated, (req, res) => {
-    res.json(tasks);
-});
-
-// edit Task
-app.get('/tasks/:id/edit', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    const taskToUpdate = tasks.find((task) => task.id === id);
-
-    if (!taskToUpdate) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    res.render('editTask.ejs', { task: taskToUpdate });
-  });
-
-
-// Update a Task
-app.post('/tasks/:id', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    const { title, description, assignee, dueDate, completed } = req.body;
-    const taskToUpdate = tasks.find((task) => task.id === id);
-
-    if (!taskToUpdate) {
-        return res.status(404).json({ message: 'Task not found' });
-    }
-
-    taskToUpdate.title = title;
-    taskToUpdate.description = description;
-    taskToUpdate.assignee = assignee;
-    taskToUpdate.dueDate = dueDate;
-    taskToUpdate.completed = completed;
-
-    res.render('task.ejs', { tasks });
-});
-
-app.get('/tasks/:id/delete', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    res.render('deleteTask.ejs', { id });
-});
-
-app.post('/tasks/:id/delete', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-
-    // Find the task to delete
-    const taskIndex = tasks.findIndex((task) => task.id === id);
-
-    // If the task doesn't exist, return a 404 error
-    if (taskIndex === -1) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
-    // Delete the task from the array
-    tasks.splice(taskIndex, 1);
-
-    // Redirect the user to the task list page
-    res.render('task.ejs', { tasks });
-  });
-
-// delete a Task
-app.delete('/tasks/:id', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    const taskIndex = tasks.findIndex((tasks) => task.id === id);
-
-    if (taskIndex === -1) {
-        return res.status(404).json({ message: 'Task not found' });
-    }
-
-    tasks.splice(taskIndex, 1);
-    res.redirect('/tasks');
-});
-
-// Project endpoints
-// Create a new project
-app.post('/projects', checkAuthenticated, (req, res) => {
-    const { name, description, taskTitle, taskDescription, taskAssignee, taskDueDate } = req.body;
-
-    const newProject = new Project(name, description);
-    const newTask = new Task(taskTitle, taskDescription, taskAssignee, taskDueDate);
-    newProject.tasks.push(newTask);
-    projects.push(newProject);
-    res.redirect('/projects');
-  });
-
-
-// List all projects
-app.get('/projects', checkAuthenticated, (req, res) => {
-    res.render('projects.ejs', { projects });
-});
-
-// Edit a project
-app.get('/projects/:id/edit', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    const projectToEdit = projects.find((project) => project.id === id);
-
-    if (!projectToEdit) {
-        return res.status(404).json({ message: 'Project not found' });
-    }
-
-    res.render('editProject.ejs', { project: projectToEdit });
-});
-
-//editing and deleting a task in a project
-app.get('/projects/:projectId/tasks/:taskId/edit', (req, res) => {
-    const projectId = req.params.projectId;
-    const taskId = req.params.taskId;
-    const project = projects.find((proj) => proj.id === projectId);
-
-    if (!project) {
-        return res.status(404).send('Project not found');
-    }
-
-    const taskToEdit = project.tasks.find((task) => task.id === taskId);
-
-    if (!taskToEdit) {
-        return res.status(404).send('Task not found');
-    }
-
-    // Render the edit form with taskToEdit.
-    res.render('editProjectTask.ejs', { project: project, task: taskToEdit });
-});
-
-app.get('/projects/:projectId/tasks/:taskId/delete', (req, res) => {
-    const projectId = req.params.projectId;
-    const taskId = req.params.taskId;
-    const project = projects.find((proj) => proj.id === projectId);
-
-    if (!project) {
-        return res.status(404).send('Project not found');
-    }
-
-    const taskIndex = project.tasks.findIndex((task) => task.id === taskId);
-
-    if (taskIndex === -1) {
-        return res.status(404).send('Task not found');
-    }
-
-    // Perform the task deletion here.
-    project.tasks.splice(taskIndex, 1);
-
-    // Redirect the user back to the project page, or wherever you want.
-    res.redirect('/projects/' + projectId);
-});
-
-
-// Update a project
-app.post('/projects/:id', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    const { name, description } = req.body;
-    const projectToUpdate = projects.find((project) => project.id === id);
-
-    if (!projectToUpdate) {
-        return res.status(404).json({ message: 'Project not found' });
-    }
-
-    projectToUpdate.name = name;
-    projectToUpdate.description = description;
-    res.redirect('/projects'); // Redirect to the projects list page.
-});
-
-// Delete a project
-app.get('/projects/:id/delete', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    res.render('deleteProject.ejs', { id });
-});
-
-app.post('/projects/:id/delete', checkAuthenticated, (req, res) => {
-    const { id } = req.params;
-    const projectIndex = projects.findIndex((project) => project.id === id);
-
-    if (projectIndex === -1) {
-        return res.status(404).json({ message: 'Project not found' });
-    }
-
-    projects.splice(projectIndex, 1);
-    res.redirect('/projects'); // Redirect to the projects list page.
-});
-
 
 app.delete('/logout', (req, res) => {
     req.logout((err) => {
@@ -286,22 +121,31 @@ app.delete('/logout', (req, res) => {
         console.error('Error during logout:', err);
         return res.redirect('/error'); // Handle errors as needed
       }
-      res.redirect('/tasks');
+      res.redirect('/login');
     });
   });
 
 function checkAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return next()
-    }
+    }   
     res.redirect('/login')
 }
 
 function checkNotAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return res.redirect('/')
-    }
+    }   
     next()
 }
+
+// Sync the database to create tables based on the defined models
+sequelize.sync()
+    .then(() => {
+        console.log('Database synchronized');
+    })
+    .catch((err) => {
+        console.error('Error synchronizing database:', err);
+    });
 
 app.listen(3000)

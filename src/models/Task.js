@@ -1,15 +1,26 @@
-#!/opt/homebrew/bin/node
-const uuid = require('uuid');
+const { DataTypes } = require('sequelize');
 
-class Task {
-    constructor(title, description, assignee, dueDate) {
-        this.id = uuid.v4();
-        this.title = title;
-        this.description = description;
-        this.assignee = assignee;
-        this.dueDate = dueDate;
-        this.completed = false;
-    }
-}
+module.exports = (sequelize) => {
+    const Task = sequelize.define('Task', {
+        title: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        description: {
+            type: DataTypes.TEXT,
+        },
+        assignee: {
+            type: DataTypes.STRING,
+        },
+        dueDate: {
+            type: DataTypes.DATE,
+        },
+        completed: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+    });
 
-module.exports = Task;
+    return Task;
+};
+
