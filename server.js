@@ -343,7 +343,7 @@ app.delete('/projects/:projectId/delete', checkAuthenticated, async (req, res) =
   }
 });
 
-
+// Logs out user
 app.delete('/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
