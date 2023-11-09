@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Task</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <h1>Edit Task</h1>
+    <form action="/tasks/<%= task.id %>/edit" method="POST">
+        <input type="hidden" name="_method" value="POST"> <!-- Use POST method for update -->
+      
+        <label for="title">Task Title:</label>
+        <input type="text" name="title" id="title" value="<%= task.title %>">
+      
+        <label for="description">Task Description:</label>
+        <textarea name="description" id="description"><%= task.description %></textarea>
+      
+        <label for="assignee">Assignee:</label>
+        <input type="text" name="assignee" id="assignee" value="<%= task.assignee %>">
+      
+        <label for="dueDate">Due Date:</label>
+        <input type="date" name="dueDate" id="dueDate" value="<%= task.dueDate %>">
+      
+        <label for="completed">Completed:</label>
+        <input type="checkbox" name="completed" id="completed" <%= task.completed ? 'checked' : '' %>>
+      
+        <button type="submit">Update Task</button>
+    </form>
+</body>
+</html>
+
