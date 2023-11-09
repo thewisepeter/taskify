@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>taskify</title>
+    <title>Create New Task</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <h1>Tasks Added</h1>
-    <ul>
-        <% tasks.forEach(task => { %>
-            <li>
-                <h2><%= task.title %></h2>
-                <p>Description: <%= task.description %></p>
-                <p>Assignee: <%= task.assignee %></p>
-                <p>Due Date: <%= task.dueDate %></p>
-                <a href="/tasks/<%= task.id %>/edit">Edit</a>
-                <a href="/tasks/<%= task.id %>/delete">Delete</a>
-            </li>
-        <% }); %>
-    </ul>
-    <p>Your tasks have been successfully added.</p>
-    <a href="/">Add Another Task</a>
+    <div class="container">
+        <h1>Create New Task</h1>
+        <form action="/projects/<%= projectId %>/tasks" method="POST">
+            <label for="title">Task Title:</label>
+            <input type="text" id="title" name="title" required>
+
+            <label for="description">Task Description:</label>
+            <textarea id="description" name="description" rows="5" required></textarea>
+
+            <label for="assignee">Assignee:</label>
+            <input type="text" id="assignee" name="assignee" required>
+
+            <label for="dueDate">Due Date:</label>
+            <input type="date" id="dueDate" name="dueDate" required>
+
+            <button type="submit">Create Task</button>
+        </form>
+    </div>
 </body>
 </html>
+
