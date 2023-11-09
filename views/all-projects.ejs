@@ -16,7 +16,20 @@
                 <a href="/projects/<%= project.id %>/tasks/new">Add Task</a>
                 <a href="/projects/<%= project.id %>">View</a>
                 <a href="/projects/<%= project.id %>/edit">Edit</a>
-                <a href="/projects/<%= project.id %>/delete">Delete</a>
+                <a href="#" onclick="event.preventDefault(); deleteProject('<%= project.id %>')">Delete</a>
+                <script>
+                    function deleteProject(projectId) {
+                        if (confirm('Are you sure you want to delete this project?')) {
+                            // Create a form dynamically to send a DELETE request
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = `/projects/${projectId}/delete`;
+                            form.innerHTML = '<input type="hidden" name="_method" value="DELETE">';
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    }
+                </script>
             </li>
         <% }); %>
     </ul>

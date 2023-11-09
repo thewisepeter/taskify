@@ -147,6 +147,46 @@ app.get('/projects/:projectId', checkAuthenticated, async (req, res) => {
         res.status(500).send('Error retrieving project');
     }
 });
+
+// Route for rendering the project editing form
+app.get('/projects/:projectId/edit', checkAuthenticated, async (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const project = await Project.findByPk(projectId);
+
+        if (!project) {
+            return res.status(404).send('Project not found');
+        }
+
+        res.render('editProject.ejs', { project });
+    } catch (error) {
+        console.error('Error retrieving project for edit:', error);
+        res.status(500).send('Error retrieving project for edit');
+    }
+});
+
+// Route for handling the project editing form submission
+app.post('/projects/:projectId/edit', checkAuthenticated, async (req, res) => {
+    try {
+        const projectId = req.params.projectId;
+        const { name, description } = req.body;
+
+        // Update the project in the database
+        const updatedProject = await Project.update({
+            name: name,
+            description: description,
+        }, {
+            where: {
+                id: projectId,
+            },
+        });
+
+        res.redirect(`/projects`);
+    } catch (error) {
+        console.error('Error updating project:', error);
+        res.status(500).send('Error updating project');
+    }
+});
   
 // Route for handling the project creation form submission
 app.post('/projects', checkAuthenticated, async (req, res) => {
@@ -284,9 +324,24 @@ app.post('/projects/:projectId/tasks/:taskId/delete', checkAuthenticated, async 
     }
 });
 
+// Route for handling project deletion
+app.delete('/projects/:projectId/delete', checkAuthenticated, async (req, res) => {
+  try {
+    const projectId = req.params.projectId;
 
+    // Delete the project from the database
+    await Project.destroy({
+      where: {
+        id: projectId, // Delete the project with the specified ID
+      },
+    });
 
-
+    res.redirect('/projects'); // Redirect to the projects list page after deletion
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    res.status(500).send('Error deleting project');
+  }
+});
 
 
 app.delete('/logout', (req, res) => {
