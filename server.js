@@ -323,4 +323,3 @@ sequelize.sync()
     });
 
 app.listen(3000)
-
