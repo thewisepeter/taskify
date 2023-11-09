@@ -17,7 +17,7 @@ const sequelize = new Sequelize('taskify', 'taskify', 'taskify_1', {
     dialect: 'mysql',
 });
 
-// Define Sequelize models for User, Project, and Task
+// Define Sequelize models for User, Project, Task
 const User = sequelize.define('User', {
     name: DataTypes.STRING,
     email: {
