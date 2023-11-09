@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task List</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <h1>Task List</h1>
+    <ul>
+        <% tasks.forEach(task => { %>
+            <li>
+                <h2><%= task.title %></h2>
+                <p>Description: <%= task.description %></p>
+                <p>Assignee: <%= task.assignee %></p>
+                <p>Due Date: <%= task.dueDate %></p>
+                <p>Completed: <%= task.completed ? 'Yes' : 'No' %></p>
+                
+                <!-- Edit Task Link -->
+                <a href="/tasks/<%= task.id %>/edit">Edit</a>
+
+                <!-- Delete Task Link -->
+                <a href="/tasks/<%= task.id %>/delete">Delete</a>
+
+                <!-- Mark as Complete Button -->
+                <form action="/tasks/<%= task.id %>/complete" method="POST">
+                    <button type="submit">Mark as Complete</button>
+                </form>
+            </li>
+        <% }); %>
+    </ul>
+</body>
+</html>
+

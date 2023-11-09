@@ -343,6 +343,143 @@ app.delete('/projects/:projectId/delete', checkAuthenticated, async (req, res) =
   }
 });
 
+// Get all tasks
+app.get('/tasks', checkAuthenticated, async (req, res) => {
+    try {
+        const tasks = await Task.findAll();
+        res.render('all-tasks.ejs', { tasks });
+    } catch (error) {
+        console.error('Error retrieving tasks:', error);
+        res.status(500).send('Error retrieving tasks');
+    }
+});
+
+// Route for rendering the task creation form
+app.get('/tasks/new', checkAuthenticated, (req, res) => {
+    res.render('taskAlone.ejs');
+});
+
+// Route for handling the task creation form submission
+app.post('/tasks', checkAuthenticated, async (req, res) => {
+    // Retrieve task data from the request body
+    const { title, description, assignee, dueDate } = req.body;
+
+    // Create a new task in the database
+    try {
+        const task = await Task.create({
+            title: title,
+            description: description,
+            assignee: assignee,
+            dueDate: dueDate,
+            // Set the UserId to associate the task with the user
+            UserId: req.user.id,
+        });
+
+        // Redirect to a page that displays the newly created task
+        res.redirect(`/tasks`);
+    } catch (error) {
+        console.error('Error creating task:', error);
+        res.status(500).send('Error creating task');
+    }
+});
+
+// Route for rendering the task edit form
+app.get('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
+    try {
+        const taskId = req.params.taskId;
+        const task = await Task.findByPk(taskId);
+
+        if (!task) {
+            return res.status(404).send('Task not found');
+        }
+
+        res.render('editTask.ejs', { task });
+    } catch (error) {
+        console.error('Error retrieving task:', error);
+        res.status(500).send('Error retrieving task');
+    }
+});
+
+// Route for handling task updates using POST method
+app.post('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
+    try {
+        const taskId = req.params.taskId;
+
+        // Retrieve updated task data from the request body
+        const { title, description, assignee, dueDate, completed } = req.body;
+
+        // Find the task in the database and update its properties
+        const updatedTask = await Task.update(
+            {
+                title: title,
+                description: description,
+                assignee: assignee,
+                dueDate: dueDate,
+                completed: completed,
+            },
+            {
+                where: {
+                    id: taskId,
+                },
+            }
+        );
+
+        // Check if the task was updated successfully
+        if (updatedTask[0] === 1) {
+            res.redirect('/tasks'); // Redirect to the tasks list page
+        } else {
+            res.status(404).send('Task not found'); // Handle case where task is not found
+        }
+    } catch (error) {
+        console.error('Error updating task:', error);
+        res.status(500).send('Error updating task');
+    }
+});
+
+// Route for handling task deletion
+app.delete('/tasks/:taskId/delete', checkAuthenticated, async (req, res) => {
+    try {
+        const taskId = req.params.taskId;
+
+        // Delete the task from the database
+        await Task.destroy({
+            where: {
+                id: taskId, // Delete the task with the specified ID
+            },
+        });
+
+        res.redirect('/tasks'); // Redirect to the tasks list page after deletion
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        res.status(500).send('Error deleting task');
+    }
+});
+
+// Route for handling marking a task as complete
+app.post('/tasks/:taskId/complete', checkAuthenticated, async (req, res) => {
+    try {
+        const taskId = req.params.taskId;
+
+        // Update the task's completion status to true
+        await Task.update(
+            {
+                completed: true,
+            },
+            {
+                where: {
+                    id: taskId,
+                },
+            }
+        );
+
+        res.redirect('/tasks'); // Redirect to the tasks list page after completion
+    } catch (error) {
+        console.error('Error marking task as complete:', error);
+        res.status(500).send('Error marking task as complete');
+    }
+});
+
+
 // Logs out user
 app.delete('/logout', (req, res) => {
     req.logout((err) => {
@@ -378,3 +515,4 @@ sequelize.sync()
     });
 
 app.listen(3000)
+
