@@ -597,12 +597,11 @@ app.post('/tasks/:taskId/complete', checkAuthenticated, async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    req.logout();  // This is a Passport method to remove the user from the session
-    req.session.destroy((err) => {
-        res.redirect('/login');
-    });
+  req.logout(() => {
+    req.session.destroy(); // Destroy the user's session
+    res.redirect('/'); // Redirect to the home page
+  });
 });
-
 
 function checkAuthenticated(req, res, next) {
     console.log('Is Authenticated:', req.isAuthenticated());
