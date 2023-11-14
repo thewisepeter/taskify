@@ -10,11 +10,16 @@ const { Sequelize, DataTypes } = require('sequelize');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const flash = require('express-flash');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
 
 // Initialize Sequelize with your database connection details
 const sequelize = new Sequelize('taskify', 'taskify', 'taskify_1', {
     host: 'localhost',
     dialect: 'mysql',
+});
+
+const sessionStore = new SequelizeStore({
+    db: sequelize,
 });
 
 // Define Sequelize models for User, Project, Task
@@ -55,11 +60,14 @@ Task.belongsTo(Project);
 app.set('view-engine', 'ejs')
 app.use(express.urlencoded({ extended: false })) 
 app.use(flash())
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
-}))
+    saveUninitialized: false,
+    store: sessionStore,
+}));
+
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(methodOverride('_method'))
@@ -77,7 +85,11 @@ app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
     successRedirect: '/',
     failureRedirect: '/login',
     failureFlash: true
-}))
+}), (req, res) => {
+    console.log('User authenticated. UserID:', req.user.id);
+    req.session.userId = req.user.id;
+    res.redirect('/');
+});
 
 app.get('/register', checkNotAuthenticated, (req, res) => {
     res.render('register.ejs')
@@ -115,12 +127,22 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
     }
 });
 
+// route to get all projects of a user
 app.get('/projects', checkAuthenticated, async (req, res) => {
-    // Fetch all projects from your database
-    const projects = await Project.findAll();
-    
-    // Render a template that displays the list of projects
-    res.render('all-projects.ejs', { projects: projects });
+    try {
+        const userId = req.user.id;
+        console.log(userId);
+        // Fetch projects associated with the logged-in user
+        const projects = await Project.findAll({
+            where: { UserId: userId },
+        });
+
+        // Render a template that displays the list of projects
+        res.render('all-projects.ejs', { projects: projects });
+    } catch (error) {
+        console.error('Error retrieving projects:', error);
+        res.status(500).send('Error retrieving projects');
+    }
 });
 
 
@@ -129,12 +151,45 @@ app.get('/projects/new', checkAuthenticated, (req, res) => {
     res.render('project.ejs'); // Render the project creation form
 });
 
+// Route for handling the project creation form submission
+app.post('/projects', checkAuthenticated, async (req, res) => {
+    // Retrieve project data from the request body
+    const { name, description } = req.body;
+
+    // Create a new project in the database associated with the currently authenticated user
+    try {
+        const userId = req.user.id;
+
+        const project = await Project.create({
+            name: name,
+            description: description,
+            UserId: userId,
+        });
+
+        // Redirect to a page that displays the newly created project
+        res.redirect('/projects');
+    } catch (error) {
+        console.error('Error creating project:', error);
+        res.status(500).send('Error creating project');
+    }
+});
+
+
+
+
 // Route to get specific project
 app.get('/projects/:projectId', checkAuthenticated, async (req, res) => {
     try {
         const projectId = req.params.projectId;
-        const project = await Project.findByPk(projectId, {
-            include: Task, // Include the associated tasks
+        const userId = req.user.id;
+
+        // Ensure that the project is associated with the currently authenticated user
+        const project = await Project.findOne({
+            where: {
+                id: projectId,
+                UserId: userId,
+            },
+            include: [Task], // Include the associated tasks
         });
 
         if (!project) {
@@ -148,11 +203,20 @@ app.get('/projects/:projectId', checkAuthenticated, async (req, res) => {
     }
 });
 
+
 // Route for rendering the project editing form
 app.get('/projects/:projectId/edit', checkAuthenticated, async (req, res) => {
     try {
         const projectId = req.params.projectId;
-        const project = await Project.findByPk(projectId);
+        const userId = req.user.id;
+
+        // Ensure that the project is associated with the currently authenticated user
+        const project = await Project.findOne({
+            where: {
+                id: projectId,
+                UserId: userId,
+            },
+        });
 
         if (!project) {
             return res.status(404).send('Project not found');
@@ -169,17 +233,22 @@ app.get('/projects/:projectId/edit', checkAuthenticated, async (req, res) => {
 app.post('/projects/:projectId/edit', checkAuthenticated, async (req, res) => {
     try {
         const projectId = req.params.projectId;
+        const userId = req.user.id;
         const { name, description } = req.body;
 
-        // Update the project in the database
-        const updatedProject = await Project.update({
-            name: name,
-            description: description,
-        }, {
-            where: {
-                id: projectId,
+        // Update the project in the database, ensuring it's associated with the currently authenticated user
+        const updatedProject = await Project.update(
+            {
+                name: name,
+                description: description,
             },
-        });
+            {
+                where: {
+                    id: projectId,
+                    UserId: userId,
+                },
+            }
+        );
 
         res.redirect(`/projects`);
     } catch (error) {
@@ -187,51 +256,34 @@ app.post('/projects/:projectId/edit', checkAuthenticated, async (req, res) => {
         res.status(500).send('Error updating project');
     }
 });
-  
-// Route for handling the project creation form submission
-app.post('/projects', checkAuthenticated, async (req, res) => {
-    // Retrieve project data from the request body
-    const { name, description } = req.body;
-  
-    // Create a new project in the database
-    try {
-      const project = await Project.create({
-        name: name,
-        description: description,
-        // Set the UserId to the currently logged-in user's ID
-        UserId: req.user.id,
-        });
-    
-        // Redirect to a page that displays the newly created project
-        res.redirect('/projects');
-    } catch (error) {
-        console.error('Error creating project:', error);
-        res.status(500).send('Error creating project');
-    }
-});
+
 
 // route to add task to project
-app.post('/projects/tasks', checkAuthenticated, async (req, res) => {
+app.post('/projects/:projectId/tasks', checkAuthenticated, async (req, res) => {
     // Retrieve task data from the request body
     const { title, description, assignee, dueDate } = req.body;
+    const projectId = req.params.projectId;
+    const userId = req.user.id;
 
-    // Create a new task in the database (you may need to adjust this part as needed)
+    // Create a new task in the database associated with the project and the currently authenticated user
     try {
         const task = await Task.create({
             title: title,
             description: description,
             assignee: assignee,
             dueDate: dueDate,
-            UserId: req.user.id,
+            UserId: userId,
+            ProjectId: projectId,
         });
 
-        // You can choose to redirect to the project details page or another appropriate page
-        res.redirect(`/projects/${req.params.projectId}`); // Redirect to the project's details page
+        // Redirect to the project's details page or another appropriate page
+        res.redirect(`/projects/${projectId}`); // Redirect to the project's details page
     } catch (error) {
         console.error('Error creating task:', error);
         res.status(500).send('Error creating task');
     }
 });
+
 
   
 // Route for rendering the task creation form
@@ -244,35 +296,49 @@ app.get('/projects/:projectId/tasks/new', checkAuthenticated, (req, res) => {
 app.post('/projects/:projectId/tasks', checkAuthenticated, async (req, res) => {
     // Retrieve task data from the request body
     const { title, description, assignee, dueDate } = req.body;
-  
-    // Create a new task in the database associated with the project
+    const projectId = req.params.projectId;
+    const userId = req.user.id;
+
+    // Create a new task in the database associated with the project and the currently authenticated user
     try {
-      const task = await Task.create({
-        title: title,
-        description: description,
-        assignee: assignee,
-        dueDate: dueDate,
-        // Set the UserId and ProjectId to associate the task with the user and project
-        UserId: req.user.id,
-        ProjectId: req.params.projectId,
-      });
-  
-      // Redirect to a page that displays the newly created task
-      res.redirect(`/projects`);
+        const task = await Task.create({
+            title: title,
+            description: description,
+            assignee: assignee,
+            dueDate: dueDate,
+            UserId: userId,
+            ProjectId: projectId,
+        });
+
+        // Redirect to a page that displays the newly created task
+        res.redirect(`/projects/${projectId}`);
     } catch (error) {
-      console.error('Error creating task:', error);
-      res.status(500).send('Error creating task');
+        console.error('Error creating task:', error);
+        res.status(500).send('Error creating task');
     }
 });
+
 
 // Route for rendering the edit task form
 app.get('/projects/:projectId/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
     // Load the task details from the database
     try {
-        const task = await Task.findByPk(req.params.taskId);
+        const userId = req.user.id;
+        const projectId = req.params.projectId;
+
+        // Ensure that the task is associated with the currently authenticated user and project
+        const task = await Task.findOne({
+            where: {
+                id: req.params.taskId,
+                UserId: userId,
+                ProjectId: projectId,
+            },
+        });
+
         if (!task) {
             return res.status(404).send('Task not found');
         }
+
         // Render the task edit form and pass the task data
         res.render('editTask.ejs', { task });
     } catch (error) {
@@ -285,74 +351,105 @@ app.get('/projects/:projectId/tasks/:taskId/edit', checkAuthenticated, async (re
 app.post('/projects/:projectId/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
     // Retrieve updated task data from the request body
     const { title, description, assignee, dueDate } = req.body;
-  
-    // Update the task in the database
+
+    // Update the task in the database, ensuring it's associated with the currently authenticated user and project
     try {
+        const userId = req.user.id;
+        const projectId = req.params.projectId;
+
         await Task.update({
             title,
             description,
             assignee,
-            dueDate
+            dueDate,
         }, {
             where: {
-                id: req.params.taskId
-            }
+                id: req.params.taskId,
+                UserId: userId,
+                ProjectId: projectId,
+            },
         });
-    
+
         // Redirect to a page that displays the updated task
-        res.redirect(`/projects/${req.params.projectId}/tasks/${req.params.taskId}`);
+        res.redirect(`/projects/${projectId}/tasks/${req.params.taskId}`);
     } catch (error) {
         console.error('Error updating task:', error);
         res.status(500).send('Error updating task');
     }
 });
 
+
 // Route for handling the task deletion
 app.post('/projects/:projectId/tasks/:taskId/delete', checkAuthenticated, async (req, res) => {
     try {
-        // Find the task by ID and delete it
-        const task = await Task.findByPk(req.params.taskId);
+        const userId = req.user.id;
+        const projectId = req.params.projectId;
+
+        // Find the task by ID and delete it, ensuring it's associated with the currently authenticated user and project
+        const task = await Task.findOne({
+            where: {
+                id: req.params.taskId,
+                UserId: userId,
+                ProjectId: projectId,
+            },
+        });
+
         if (!task) {
             return res.status(404).send('Task not found');
         }
+
         await task.destroy();
+
         // Redirect to the project's tasks page or any other suitable location
-        res.redirect(`/projects/${req.params.projectId}`);
+        res.redirect(`/projects/${projectId}`);
     } catch (error) {
         console.error('Error deleting task:', error);
         res.status(500).send('Error deleting task');
     }
 });
 
+
 // Route for handling project deletion
-app.delete('/projects/:projectId/delete', checkAuthenticated, async (req, res) => {
-  try {
-    const projectId = req.params.projectId;
+app.get('/projects/:projectId/delete', checkAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const projectId = req.params.projectId;
+  
+      // Delete the project from the database, ensuring it's associated with the currently authenticated user
+      await Project.destroy({
+        where: {
+          id: projectId,
+          UserId: userId,
+        },
+      });
+  
+      res.redirect('/projects'); // Redirect to the projects list page after deletion
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      res.status(500).send('Error deleting project');
+    }
+  });
+  
 
-    // Delete the project from the database
-    await Project.destroy({
-      where: {
-        id: projectId, // Delete the project with the specified ID
-      },
-    });
-
-    res.redirect('/projects'); // Redirect to the projects list page after deletion
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    res.status(500).send('Error deleting project');
-  }
-});
-
-// Get all tasks
+// Get all tasks for the currently authenticated user
 app.get('/tasks', checkAuthenticated, async (req, res) => {
     try {
-        const tasks = await Task.findAll();
+        const userId = req.user.id;
+
+        // Fetch tasks only for the currently authenticated user
+        const tasks = await Task.findAll({
+            where: {
+                UserId: userId,
+            },
+        });
+
         res.render('all-tasks.ejs', { tasks });
     } catch (error) {
         console.error('Error retrieving tasks:', error);
         res.status(500).send('Error retrieving tasks');
     }
 });
+
 
 // Route for rendering the task creation form
 app.get('/tasks/new', checkAuthenticated, (req, res) => {
@@ -364,8 +461,8 @@ app.post('/tasks', checkAuthenticated, async (req, res) => {
     // Retrieve task data from the request body
     const { title, description, assignee, dueDate } = req.body;
 
-    // Create a new task in the database
     try {
+        // Create a new task in the database associated with the currently authenticated user
         const task = await Task.create({
             title: title,
             description: description,
@@ -383,11 +480,20 @@ app.post('/tasks', checkAuthenticated, async (req, res) => {
     }
 });
 
+
 // Route for rendering the task edit form
 app.get('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
     try {
+        const userId = req.user.id;
         const taskId = req.params.taskId;
-        const task = await Task.findByPk(taskId);
+
+        // Find the task in the database for the currently authenticated user
+        const task = await Task.findOne({
+            where: {
+                id: taskId,
+                UserId: userId,
+            },
+        });
 
         if (!task) {
             return res.status(404).send('Task not found');
@@ -403,13 +509,14 @@ app.get('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
 // Route for handling task updates using POST method
 app.post('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
     try {
+        const userId = req.user.id;
         const taskId = req.params.taskId;
 
         // Retrieve updated task data from the request body
         const { title, description, assignee, dueDate, completed } = req.body;
 
-        // Find the task in the database and update its properties
-        const updatedTask = await Task.update(
+        // Update the task in the database for the currently authenticated user
+        const [updatedTaskCount] = await Task.update(
             {
                 title: title,
                 description: description,
@@ -420,15 +527,16 @@ app.post('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
             {
                 where: {
                     id: taskId,
+                    UserId: userId,
                 },
             }
         );
 
         // Check if the task was updated successfully
-        if (updatedTask[0] === 1) {
+        if (updatedTaskCount === 1) {
             res.redirect('/tasks'); // Redirect to the tasks list page
         } else {
-            res.status(404).send('Task not found'); // Handle case where task is not found
+            res.status(404).send('Task not found or unauthorized'); // Handle case where task is not found or unauthorized
         }
     } catch (error) {
         console.error('Error updating task:', error);
@@ -436,24 +544,33 @@ app.post('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
     }
 });
 
+
 // Route for handling task deletion
-app.delete('/tasks/:taskId/delete', checkAuthenticated, async (req, res) => {
+app.get('/tasks/:taskId/delete', checkAuthenticated, async (req, res) => {
     try {
+        const userId = req.user.id;
         const taskId = req.params.taskId;
 
-        // Delete the task from the database
-        await Task.destroy({
+        // Delete the task from the database for the currently authenticated user
+        const deletedTaskCount = await Task.destroy({
             where: {
-                id: taskId, // Delete the task with the specified ID
+                id: taskId,
+                UserId: userId,
             },
         });
 
-        res.redirect('/tasks'); // Redirect to the tasks list page after deletion
+        // Check if the task was deleted successfully
+        if (deletedTaskCount === 1) {
+            res.redirect('/tasks'); // Redirect to the tasks list page after deletion
+        } else {
+            res.status(404).send('Task not found or unauthorized'); // Handle case where task is not found or unauthorized
+        }
     } catch (error) {
         console.error('Error deleting task:', error);
         res.status(500).send('Error deleting task');
     }
 });
+
 
 // Route for handling marking a task as complete
 app.post('/tasks/:taskId/complete', checkAuthenticated, async (req, res) => {
@@ -479,23 +596,19 @@ app.post('/tasks/:taskId/complete', checkAuthenticated, async (req, res) => {
     }
 });
 
-
-// Logs out user
-app.delete('/logout', (req, res) => {
-    req.logout((err) => {
-      if (err) {
-        console.error('Error during logout:', err);
-        return res.redirect('/error'); // Handle errors as needed
-      }
-      res.redirect('/login');
-    });
+app.get('/logout', (req, res) => {
+  req.logout(() => {
+    req.session.destroy(); // Destroy the user's session
+    res.redirect('/'); // Redirect to the home page
   });
+});
 
 function checkAuthenticated(req, res, next) {
+    console.log('Is Authenticated:', req.isAuthenticated());
     if (req.isAuthenticated()) {
-        return next()
+        return next();
     }   
-    res.redirect('/login')
+    res.redirect('/login');
 }
 
 function checkNotAuthenticated(req, res, next) {
@@ -515,4 +628,3 @@ sequelize.sync()
     });
 
 app.listen(3000)
-
