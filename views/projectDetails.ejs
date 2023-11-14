@@ -12,10 +12,10 @@
     <h2>About: <%= project.description %></h2>
     
     <!-- Check if the project has associated tasks -->
-    <% if (project.tasks && project.tasks.length > 0) { %>
+    <% if (project.Tasks && project.Tasks.length > 0) { %>
         <h3>Tasks:</h3>
         <ul>
-            <% project.tasks.forEach(task => { %>
+            <% project.Tasks.forEach(task => { %>
                 <li>
                     <h4><%= task.title %></h4>
                     <p>Description: <%= task.description %></p>
@@ -26,7 +26,8 @@
         </ul>
     <% } else { %>
         <p>No tasks associated with this project.</p>
-    <% } %>
+    <% } %> 
 </body>
 </html>
+
 

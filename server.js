@@ -189,7 +189,7 @@ app.get('/projects/:projectId', checkAuthenticated, async (req, res) => {
                 id: projectId,
                 UserId: userId,
             },
-            include: Task, // Include the associated tasks
+            include: [Task], // Include the associated tasks
         });
 
         if (!project) {
@@ -410,7 +410,7 @@ app.post('/projects/:projectId/tasks/:taskId/delete', checkAuthenticated, async 
 
 
 // Route for handling project deletion
-app.delete('/projects/:projectId/delete', checkAuthenticated, async (req, res) => {
+app.get('/projects/:projectId/delete', checkAuthenticated, async (req, res) => {
     try {
       const userId = req.user.id;
       const projectId = req.params.projectId;
@@ -546,7 +546,7 @@ app.post('/tasks/:taskId/edit', checkAuthenticated, async (req, res) => {
 
 
 // Route for handling task deletion
-app.delete('/tasks/:taskId/delete', checkAuthenticated, async (req, res) => {
+app.get('/tasks/:taskId/delete', checkAuthenticated, async (req, res) => {
     try {
         const userId = req.user.id;
         const taskId = req.params.taskId;
