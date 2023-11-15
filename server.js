@@ -12,6 +12,9 @@ const bcrypt = require('bcrypt');
 const flash = require('express-flash');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
 
+const multer = require('multer');
+const upload = multer({ dest: 'public/profile-pictures' });
+
 // Initialize Sequelize with your database connection details
 const sequelize = new Sequelize('taskify', 'taskify', 'taskify_1', {
     host: 'localhost',
@@ -30,6 +33,7 @@ const User = sequelize.define('User', {
         unique: true, // Ensures email is unique
     },
     password: DataTypes.STRING,
+    profilePicture: DataTypes.STRING,
 });
 
 const Project = sequelize.define('Project', {
@@ -74,7 +78,7 @@ app.use(methodOverride('_method'))
 app.use(express.static('public'));
 
 app.get('/', checkAuthenticated, (req, res) => {
-    res.render('index.ejs', { name: req.user.name, email: req.user.email })
+    res.render('index.ejs', { name: req.user.name, email: req.user.email, profilePicture: req.user.profilePicture })
 })
 
 app.get('/login', checkNotAuthenticated, (req, res) => {
@@ -95,10 +99,11 @@ app.get('/register', checkNotAuthenticated, (req, res) => {
     res.render('register.ejs')
 })
 
-app.post('/register', checkNotAuthenticated, async (req, res) => {
+app.post('/register', checkNotAuthenticated, upload.single('profile-picture'), async (req, res) => {
     try {
         const { name, email, password, 'retype-password': retypePassword } = req.body;
-
+        
+        console.log('Request body:', req.body);
         // Check if the email already exists in the database
         const existingUser = await User.findOne({ where: { email: email } });
 
@@ -114,10 +119,11 @@ app.post('/register', checkNotAuthenticated, async (req, res) => {
         // If the email is not in use, proceed with registration
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await User.create({
+        const newUser = await User.create({
             name: name,
             email: email,
             password: hashedPassword,
+            profilePicture: req.file.filename,
         });
 
         res.redirect('/login');
@@ -595,6 +601,39 @@ app.post('/tasks/:taskId/complete', checkAuthenticated, async (req, res) => {
         res.status(500).send('Error marking task as complete');
     }
 });
+
+// Route for rendering the edit profile form
+app.get('/edit-profile', checkAuthenticated, (req, res) => {
+    res.render('editProfile.ejs', { user: req.user });
+});
+
+// Route for handling the edit profile form submission
+app.post('/edit-profile', checkAuthenticated, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { name, email, profilePicture } = req.body;
+
+        // Update the user in the database
+        await User.update(
+            {
+                name: name,
+                email: email,
+                profilePicture: profilePicture,
+            },
+            {
+                where: {
+                    id: userId,
+                },
+            }
+        );
+
+        res.redirect('/');
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).send('Error updating user profile');
+    }
+});
+
 
 app.get('/logout', (req, res) => {
   req.logout(() => {

@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Register</h1>
-    <form action="/register" method="POST">
+    <form action="/register" method="POST" enctype="multipart/form-data">
         <div>
             <label for="name">Name</label>
             <input type="text" id="name" name="name" required>
@@ -21,12 +21,17 @@
             <label for="password">Password</label>
             <input type="password" id="password" name="password" required>
         </div>
-         <div>
+        <div>
             <label for="retype-password">Retype Password</label>
             <input type="password" id="retype-password" name="retype-password" required>
+        </div>
+        <div>
+            <label for="profile-picture">Profile Picture</label>
+            <input type="file" id="profile-picture" name="profile-picture" accept="image/*">
         </div>
         <button type="submit">Register</button>
     </form>
     <a href="/login">Login</a>
 </body>
 </html>
+
