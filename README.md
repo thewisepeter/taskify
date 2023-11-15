@@ -45,24 +45,29 @@ To run Taskify locally, follow these steps:
    cd taskify
 
 2. **Install dependencies:**
+
+   ```bash
    npm install
 
 3. **Set up the database:**
     - Create a MySQL database and update the database configuration in config/config.json.
     - Run migrations to set up the database schema:
     
-    npx sequelize-cli db:migrate
+        ```bash
+        npx sequelize-cli db:migrate
 
 4. **Start the server:**
+    ```bash
     npm run devStart
+
     - The application should now be running at **http://localhost:3000**
 
-**Usage**
+## Usage
     - Visit http://localhost:3000 in your web browser to access the Taskify application.
 
     - Register an account, log in, and start managing your projects and tasks.
 
-**Contributing**
+## Contributing
 
 We welcome contributions! If you'd like to contribute to Taskify, please follow these guidelines:
     1. Fork the repository and create your branch: git checkout -b feature/my-feature.
