@@ -634,7 +634,6 @@ app.post('/edit-profile', checkAuthenticated, async (req, res) => {
     }
 });
 
-
 app.get('/logout', (req, res) => {
   req.logout(() => {
     req.session.destroy(); // Destroy the user's session
