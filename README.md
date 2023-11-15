@@ -57,8 +57,8 @@ To run Taskify locally, follow these steps:
         npx sequelize-cli db:migrate
 
 4. **Start the server:**
-    ```bash
-    npm run devStart
+        ```bash
+        npm run devStart
 
 - The application should now be running at **http://localhost:3000**
 
