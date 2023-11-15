@@ -60,7 +60,7 @@ To run Taskify locally, follow these steps:
     ```bash
     npm run devStart
 
-    - The application should now be running at **http://localhost:3000**
+- The application should now be running at **http://localhost:3000**
 
 ## Usage
     - Visit http://localhost:3000 in your web browser to access the Taskify application.
