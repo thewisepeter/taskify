@@ -11,10 +11,6 @@ Taskify is a simple task management application that allows users to organize th
 
     - Peter is the architectural backbone, ensuring the backend handles data management, API design, and rigorous testing seamlessly.
 
-2. **Arnold Kiirya**
-
-    - Arnold is at the forefront of crafting a user-centric interface, making task management a breeze for our users.
-
 ## Technologies 
 
 ### Languages
