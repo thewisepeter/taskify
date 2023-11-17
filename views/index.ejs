@@ -2,110 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Taskify</title>
-    <!-- Include AdminLTE CSS from CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
+    <title>Twitter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <link 
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+        integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="/css/styles_2.css" />
 </head>
-<body class="hold-transition sidebar-mini">
-    <div class="wrapper">
-
-        <!-- Navbar -->
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-            <!-- Left navbar links -->
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-                </li>
-                <li class="nav-item d-none d-sm-inline-block">
-                    <a href="/" class="nav-link">Home</a>
-                </li>
-            </ul>
-
-            <!-- Right navbar links -->
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/logout">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <!-- /.navbar -->
-
-        <!-- Main Sidebar Container -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4">
-            <!-- Brand Logo -->
-            <a href="/" class="brand-link">
-                <span class="brand-text font-weight-light">Taskify</span>
+<body>
+    <!-- sidebar starts -->
+    <div class="sidebar">
+        <i class="fab fa-twitter"></i>
+        <div class="sidebarOption active">
+            <a href="/">
+                <span class="material-symbols-outlined"> home </span>
+                <h2>Home</h2>
             </a>
-
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- Sidebar Menu -->
-                <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <li class="nav-item">
-                            <a href="/" class="nav-link">
-                                <i class="nav-icon fas fa-home"></i>
-                                <p>Home</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/tasks" class="nav-link">
-                                <i class="nav-icon fas fa-tasks"></i>
-                                <p>Tasks</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/projects/new" class="nav-link">
-                                <i class="nav-icon fas fa-plus"></i>
-                                <p>Add Project</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/tasks/new" class="nav-link">
-                                <i class="nav-icon fas fa-plus"></i>
-                                <p>Add Task</p>
-                            </a>
-                        </li>
-                        <!-- Add more sidebar items as needed -->
-
-                    </ul>
-                </nav>
-                <!-- /.sidebar-menu -->
-            </div>
-            <!-- /.sidebar -->
-        </aside>
-
-        <!-- Content Wrapper. Contains page content -->
-        <div class="content-wrapper">
-            <!-- Content Header (Page header) -->
-            <div class="content-header">
-                <div class="container-fluid">
-                    <h1 class="m-0">Welcome, <%= name %></h1>
-                    <img src="<%= profilePicture %>" alt="Profile Picture" class="img-fluid rounded-circle" style="max-width: 100px; max-height: 100px;">
-                    <p>Email: <%= email %></p>
-                    <a href="/edit-profile" class="btn btn-primary">Edit Profile</a>
-                </div>
-            </div>
-
-            <!-- Main content -->
-            <div class="content">
-                <div class="container-fluid">
-                    <h2>Add a Project or a Task</h2>
-                    <div>
-                        <a href="/projects/new" class="btn btn-success">Add Project</a>
-                    </div>
-                    <div>
-                        <a href="/tasks/new" class="btn btn-info">Add Task</a>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Include AdminLTE JS from CDN -->
-        <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+        <div class="sidebarOption">
+            <a href="/projects">
+                <span class="material-symbols-outlined"> tactic </span>
+                <h2>Projects</h2>
+            </a>
+        </div>
+
+        <div class="sidebarOption">
+            <a href="/tasks">
+                <span class="material-symbols-outlined"> checklist </span>
+                <h2>Tasks</h2>
+            </a>
+        </div>
+
+        <div class="sidebarOption">
+            <a href="/profile">
+                <span class="material-symbols-outlined"> person </span>
+                <h2>Profile</h2>
+            </a>
+        </div>
+
+        <div>
+            <a href="/logout">
+                <button class="sidebar__tweet">Log Out</button>
+            </a>
+        </div>
+
     </div>
+    <!-- sidebar ends -->
+
+    <!-- feed starts-->
+    <div class="feed">
+        <div class="feed__header">
+            <h2>Welcome, <%= name %></h2>
+        </div>
+
+        <!-- All Projects  Starts -->
+        <div class="post">
+            <h3>All Projects</h3>
+            <% if (projects.length > 0) { %>
+                <ul>
+                    <% projects.forEach(project => { %>
+                        <li><%= project.name %></li>
+                    <% }); %>
+                </ul>
+            <% } else { %>
+                <p class="no-items">No Projects yet</p>
+            <% } %>
+        </div>
+        <!-- All Projects Ends -->
+
+        <!-- All Tasks Starts -->
+        <div class="post">
+            <h3>All Tasks</h3>
+            <% if (tasks.length > 0) { %>
+                <ul>
+                    <% tasks.forEach(task => { %>
+                        <li><%= task.title %></li>
+                    <% }); %>
+                </ul>
+            <% } else { %>
+                <p class="no-items">No Tasks yet</p>
+            <% } %>
+        </div>
+        <!-- All Tasks Ends -->
+    </div>
+    <!-- feed ends-->
+
+    <!-- widgets starts -->
+    <div class="widgets">
+        <div class="widgets__input">
+          <span class="material-icons widgets__searchIcon"> search </span>
+          <input type="text" placeholder="Search Twitter" />
+        </div>
+
+        <div class="widgets__widgetContainer">
+          <h2>What's happening?</h2>
+          <blockquote class="twitter-tweet">
+            <p lang="en" dir="ltr">
+              Sunsets don&#39;t get much better than this one over
+              <a href="https://twitter.com/GrandTetonNPS?ref_src=twsrc%5Etfw">@GrandTetonNPS</a>.
+              <a href="https://twitter.com/hashtag/nature?src=hash&amp;ref_src=twsrc%5Etfw"
+                >#nature</a
+              >
+              <a href="https://twitter.com/hashtag/sunset?src=hash&amp;ref_src=twsrc%5Etfw"
+                >#sunset</a
+              >
+              <a href="http://t.co/YuKy2rcjyU">pic.twitter.com/YuKy2rcjyU</a>
+            </p>
+            &mdash; US Department of the Interior (@Interior)
+            <a href="https://twitter.com/Interior/status/463440424141459456?ref_src=twsrc%5Etfw"
+              >May 5, 2014</a
+            >
+          </blockquote>
+          <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+        </div>
+      </div>
+      <!-- widgets ends -->
+
 </body>
-</html>
+</html> 
