@@ -77,9 +77,27 @@ app.use(passport.session())
 app.use(methodOverride('_method'))
 app.use(express.static('public'));
 
-app.get('/', checkAuthenticated, (req, res) => {
-    res.render('index.ejs', { name: req.user.name, email: req.user.email, profilePicture: req.user.profilePicture })
-})
+app.get('/', checkAuthenticated,async(req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Fetch projects associated with the logged-in user
+        const projects = await Project.findAll({
+            where: { UserId: userId },
+        });
+
+        // Fetch tasks only for the currently authenticated user
+        const tasks = await Task.findAll({
+            where: {
+                UserId: userId,
+            },
+        });
+        res.render('index.ejs', { name: req.user.name, projects, tasks })
+    } catch (error) {
+        console.error('Error retrieving data:', error);
+        res.status(500).send('Error retrieving data');
+    }
+});
 
 app.get('/login', checkNotAuthenticated, (req, res) => {
     res.render('login.ejs')
@@ -144,7 +162,7 @@ app.get('/projects', checkAuthenticated, async (req, res) => {
         });
 
         // Render a template that displays the list of projects
-        res.render('all-projects.ejs', { projects: projects });
+        res.render('all-projects.ejs', { projects: projects, noProjects: projects.length === 0 });
     } catch (error) {
         console.error('Error retrieving projects:', error);
         res.status(500).send('Error retrieving projects');
@@ -449,7 +467,7 @@ app.get('/tasks', checkAuthenticated, async (req, res) => {
             },
         });
 
-        res.render('all-tasks.ejs', { tasks });
+        res.render('all-tasks.ejs', { tasks, noTasks: tasks.length === 0 });
     } catch (error) {
         console.error('Error retrieving tasks:', error);
         res.status(500).send('Error retrieving tasks');
@@ -602,6 +620,15 @@ app.post('/tasks/:taskId/complete', checkAuthenticated, async (req, res) => {
     }
 });
 
+// Route to get profile info
+app.get('/profile', checkAuthenticated, (req, res) => {
+    // Access the user information from req.user
+    const { name, email, profilePicture } = req.user;
+
+    // You can now use this information to render the profile page
+    res.render('profile', { name, email, profilePicture });
+});
+
 // Route for rendering the edit profile form
 app.get('/edit-profile', checkAuthenticated, (req, res) => {
     res.render('editProfile.ejs', { user: req.user });
@@ -666,3 +693,4 @@ sequelize.sync()
     });
 
 app.listen(3000)
+
