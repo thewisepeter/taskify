@@ -364,6 +364,54 @@ body {
     background-color: #c82333; /* Darker red color on hover */
 }
 
+/* Project Creation */
+.project-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.input,
+textarea {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.create-project-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: var(--twitter-color);;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.create-project-btn:hover {
+    background-color: #013434;
+}
+
+
+
 /* widgets */
 .widgets {
     flex: 0.3;
