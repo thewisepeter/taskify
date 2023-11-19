@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twitter</title>
+    <title>Taskify</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link 
         rel="stylesheet"
@@ -17,8 +17,10 @@
 <body>
     <!-- sidebar starts -->
     <div class="sidebar">
-        <i class="fab fa-twitter"></i>
-        <div class="sidebarOption active">
+        <a href="/">
+            <i class="logo">taskify</i>
+        </a>
+        <div class="sidebarOption">
             <a href="/">
                 <span class="material-symbols-outlined"> home </span>
                 <h2>Home</h2>
@@ -72,6 +74,7 @@
                 </ul>
             <% } else { %>
                 <p class="no-items">No Projects yet</p>
+                <button onclick="window.location.href='/projects/new'">Add Project</button>
             <% } %>
         </div>
         <!-- All Projects Ends -->
@@ -87,6 +90,7 @@
                 </ul>
             <% } else { %>
                 <p class="no-items">No Tasks yet</p>
+                <button onclick="window.location.href='/tasks/new'">Add Task</button>
             <% } %>
         </div>
         <!-- All Tasks Ends -->
