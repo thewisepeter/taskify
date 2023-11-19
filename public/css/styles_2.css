@@ -321,26 +321,63 @@ body {
   padding: 20px;
 }
 
-.pt__detail {
-    margin-bottom: 5px; /* Adjust the value as needed */
-}
+/* .pt__detail {
+    margin-bottom: 5px;
+} */
 
-.pt__display h5.pt__name {
+h5.pt__name {
   font-weight: bold;
   font-size: 18px;
   margin-bottom: 5px;
 }
 
-.pt__display h5.pt__detail {
+h5.pt__detail {
   font-weight: 700;
   font-size: 13px;
   margin-left: 10px;
 }
 
-.pt__display h5 {
+/*.pt__display h5 {
   font-weight: bold;
+}*/
+
+/* =========== */
+.pt__display {
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
 }
 
+.pt__name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.pt__detail {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+ul li {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+/* Style for the "No tasks associated" message */
+.pt__display p {
+  color: #888;
+  font-style: italic;
+}
+/* =========== */
 
 .project-divider {
     margin: 10px 0;
@@ -448,4 +485,3 @@ textarea {
   font-size: 18px;
   font-weight: 800;
 }
-
