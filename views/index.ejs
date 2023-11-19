@@ -69,7 +69,21 @@
             <% if (projects.length > 0) { %>
                 <ul>
                     <% projects.forEach(project => { %>
-                        <li><%= project.name %></li>
+                        <li class="pt__display">
+                            <div class="pt__body">
+                                <h5 class="pt__name"><%= project.name %></h5>
+                                <h5 class="pt__detail"><%= project.description %></h5>
+                                <!-- Display other project details and provide links to view/edit/delete projects -->
+                                <button onclick="window.location.href='/projects/new'">Add Project</button>
+                                <button onclick="window.location.href='/projects/<%= project.id %>/tasks/new'">Add Task</button>
+                                <button onclick="window.location.href='/projects/<%= project.id %>'">View</button>
+                                <button onclick="window.location.href='/projects/<%= project.id %>/edit'">Edit</button>
+
+                                <!-- Add a link to delete the project -->
+                                <a href="/projects/<%= project.id %>/delete" class="delete-button" onclick="return confirm('Are you sure you want to delete this project?')">Delete</a>
+                            </div>
+                            <hr class="project-divider">
+                        </li>
                     <% }); %>
                 </ul>
             <% } else { %>
@@ -85,7 +99,52 @@
             <% if (tasks.length > 0) { %>
                 <ul>
                     <% tasks.forEach(task => { %>
-                        <li><%= task.title %></li>
+                        <li class="pt__display">
+                            <div class="pt__body">
+                                <h5 class="pt__name"><%= task.title %></h5>
+                                <h5 class="pt__detail">Description: <%= task.description %></h5>
+                                <h5 class="pt__detail">Assignee: <%= task.assignee %></h5>
+                                <h5 class="pt__detail">Due Date: <%= task.dueDate %></h5>
+                                <h5 class="pt__detail">Completed: <%= task.completed ? 'Yes' : 'No' %></h5>
+                            
+                                <!-- Add New task --> 
+                                <button onclick="window.location.href='/tasks/new'">Add Task</button>
+                                
+                                <!-- Edit Task Link -->
+                                <button onclick="window.location.href='/tasks/<%= task.id %>/edit'">Edit</button>
+
+                                <!-- Mark as Complete Button -->
+                                <button onclick="markAsComplete('<%= task.id %>')">Mark as Complete</button>
+
+                                 <!-- Delete Task Link -->
+                                 <a href="/tasks/<%= task.id %>/delete" class="delete-button" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
+
+                                <script>
+                                function markAsComplete(taskId) {
+                                    // Create a form element
+                                    const form = document.createElement('form');
+                                    form.action = `/tasks/${taskId}/complete`; // Set the form action
+                                    form.method = 'POST'; // Set the form method
+
+                                    // Create a hidden input to send the CSRF token if needed
+                                    const csrfInput = document.createElement('input');
+                                    csrfInput.type = 'hidden';
+                                    csrfInput.name = '_csrf'; // Adjust the name based on your implementation
+                                    csrfInput.value = 'your_csrf_token_value'; // Replace with your CSRF token
+
+                                    // Append the CSRF input to the form
+                                    form.appendChild(csrfInput);
+
+                                    // Append the form to the document body
+                                    document.body.appendChild(form);
+
+                                    // Submit the form
+                                    form.submit();
+                                }
+                                </script>
+                            </div>
+                            <hr class="project-divider">
+                        </li>
                     <% }); %>
                 </ul>
             <% } else { %>
@@ -129,4 +188,4 @@
       <!-- widgets ends -->
 
 </body>
-</html> 
+</html>
