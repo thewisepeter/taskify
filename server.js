@@ -162,7 +162,7 @@ app.get('/projects', checkAuthenticated, async (req, res) => {
         });
 
         // Render a template that displays the list of projects
-        res.render('all-projects.ejs', { projects: projects, noProjects: projects.length === 0 });
+        res.render('all-projects.ejs', { name: req.user.name, projects: projects, noProjects: projects.length === 0 });
     } catch (error) {
         console.error('Error retrieving projects:', error);
         res.status(500).send('Error retrieving projects');
@@ -467,7 +467,7 @@ app.get('/tasks', checkAuthenticated, async (req, res) => {
             },
         });
 
-        res.render('all-tasks.ejs', { tasks, noTasks: tasks.length === 0 });
+        res.render('all-tasks.ejs', { name: req.user.name, tasks, noTasks: tasks.length === 0 });
     } catch (error) {
         console.error('Error retrieving tasks:', error);
         res.status(500).send('Error retrieving tasks');
@@ -693,4 +693,3 @@ sequelize.sync()
     });
 
 app.listen(3000)
-
