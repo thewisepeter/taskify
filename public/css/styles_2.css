@@ -96,7 +96,7 @@ body {
     padding: 20px;
 }
 
-.sidebar a {
+.sidebar a { 
   text-decoration: none;
 }
 
@@ -284,7 +284,7 @@ body {
 .post h3 {
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .post p.no-items {
@@ -319,6 +319,49 @@ body {
 
 .post__avatar {
   padding: 20px;
+}
+
+.pt__detail {
+    margin-bottom: 5px; /* Adjust the value as needed */
+}
+
+.pt__display h5.pt__name {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.pt__display h5.pt__detail {
+  font-weight: 700;
+  font-size: 13px;
+  margin-left: 10px;
+}
+
+.pt__display h5 {
+  font-weight: bold;
+}
+
+
+.project-divider {
+    margin: 10px 0;
+    border: none;
+    border-top: 1px solid #ccc; /* Color of the divider */
+}
+
+.pt__display .delete-button {
+    display: inline-block;
+    padding: 5px 12px;
+    margin-top: 10px;
+    color: white;
+    background-color: #dc3545; /* Red color */
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pt__display .delete-button:hover {
+    background-color: #c82333; /* Darker red color on hover */
 }
 
 /* widgets */
@@ -357,3 +400,4 @@ body {
   font-size: 18px;
   font-weight: 800;
 }
+
